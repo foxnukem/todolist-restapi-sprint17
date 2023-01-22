@@ -17,25 +17,26 @@ import javax.servlet.http.HttpServletRequest;
 
 @Slf4j
 @RestControllerAdvice
-public class GlobalExceptionHandler { // consider extending ResponseEntityExceptionHandler
+public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
-    @ExceptionHandler
-    public ResponseEntity<?> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
-        // todo
-        return ResponseEntity.badRequest().body(ex.getBindingResult().toString());
-    }
+//    @ExceptionHandler(MethodArgumentNotValidException.class)
+//    public ResponseEntity<?> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
+//        logger.error(ex + " " + ex.getMessage());
+//        return ResponseEntity.badRequest().body(ex.getBindingResult().toString());
+//    }
 
-    @ExceptionHandler
+    @ExceptionHandler(NullEntityReferenceException.class)
     public ResponseEntity<?> handleNullEntityReferenceException(NullEntityReferenceException ex) {
-        // todo
+        logger.error(ex);
         return ResponseEntity.badRequest().body(ex.getMessage());
     }
 
-    @ExceptionHandler
+    @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<?> handleEntityNotFoundException(EntityNotFoundException ex) {
-        // todo: add logging
+        logger.error(ex);
         return ResponseEntity.notFound().build();
     }
 
     // todo: add more handlers
+    // todo: NoSuchElementException
 }
