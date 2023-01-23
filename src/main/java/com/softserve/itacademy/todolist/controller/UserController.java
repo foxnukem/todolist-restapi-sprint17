@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,11 +21,13 @@ import java.util.stream.Collectors;
 public class UserController {
     UserService userService;
     RoleService roleService;
+    PasswordEncoder passwordEncoder;
 
     @Autowired
-    UserController(UserService userService, RoleService roleService) {
+    UserController(UserService userService, RoleService roleService, PasswordEncoder passwordEncoder) {
         this.userService = userService;
         this.roleService = roleService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
@@ -35,16 +38,15 @@ public class UserController {
                 .collect(Collectors.toList());
     }
 
-    //TODO
-    @PostMapping("/signin")
+    @PostMapping("/signup")
     ResponseEntity<?> create(@RequestBody UserRequest userRequest) {
         User user = new User();
         user.setFirstName(userRequest.getFirstName());
         user.setLastName(userRequest.getLastName());
         user.setEmail(userRequest.getEmail());
-        user.setPassword(userRequest.getPassword());
+        user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
         user.setRole(roleService.readById(2));
-        return new ResponseEntity<>("Created User " + userService.create(user), HttpStatus.OK);
+        return new ResponseEntity<>("Created User " + new UserResponse(userService.create(user)), HttpStatus.CREATED);
     }
 
     @PreAuthorize("hasAuthority('ROLE_ADMIN') or #id==authentication.principal.id")
@@ -53,7 +55,6 @@ public class UserController {
         return new ResponseEntity<>(new UserResponse(userService.readById(id)), HttpStatus.OK);
     }
 
-    //TODO
     @PreAuthorize("hasAuthority('ROLE_ADMIN') or #id==authentication.principal.id")
     @PutMapping("/{id}")
     ResponseEntity<?> update(@PathVariable Long id, @RequestBody UserRequest userRequest) {
@@ -63,7 +64,7 @@ public class UserController {
         user.setFirstName(userRequest.getFirstName());
         user.setLastName(userRequest.getLastName());
         user.setEmail(userRequest.getEmail());
-        user.setPassword(userRequest.getPassword());
+        user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
         user.setRole(oldUser.getRole());
         return new ResponseEntity<>("Updated User " + userService.update(user), HttpStatus.OK);
     }

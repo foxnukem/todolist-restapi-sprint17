@@ -18,9 +18,9 @@ public class UserServiceImpl implements UserService {
     private UserRepository userRepository;
 
     @Override
-    public User create(User role) {
-        if (role != null) {
-            return userRepository.save(role);
+    public User create(User user) {
+        if (user != null) {
+            return userRepository.save(user);
         }
         throw new NullEntityReferenceException("User cannot be 'null'");
     }

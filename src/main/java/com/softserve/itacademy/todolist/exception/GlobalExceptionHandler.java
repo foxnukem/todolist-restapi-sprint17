@@ -2,11 +2,13 @@ package com.softserve.itacademy.todolist.exception;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import javax.persistence.EntityNotFoundException;
+import javax.validation.ConstraintViolationException;
 import java.util.NoSuchElementException;
 
 @Slf4j
@@ -19,15 +21,15 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.badRequest().body(ex.getMessage());
     }
 
-    @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<?> handleEntityNotFoundException(EntityNotFoundException ex) {
+    @ExceptionHandler({NoSuchElementException.class, EntityNotFoundException.class, UsernameNotFoundException.class})
+    public ResponseEntity<?> handleNoSuchElementException(Exception ex) {
         logger.error(ex);
         return ResponseEntity.notFound().build();
     }
 
-    @ExceptionHandler(NoSuchElementException.class)
-    public ResponseEntity<?> handleNoSuchElementException(NoSuchElementException ex) {
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<?> handleConstraintViolationException(ConstraintViolationException ex) {
         logger.error(ex);
-        return ResponseEntity.notFound().build();
+        return ResponseEntity.badRequest().body(ex.getMessage());
     }
 }
