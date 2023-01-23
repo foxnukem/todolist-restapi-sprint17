@@ -6,6 +6,7 @@ import com.softserve.itacademy.todolist.model.User;
 import com.softserve.itacademy.todolist.service.TaskService;
 import com.softserve.itacademy.todolist.service.ToDoService;
 import com.softserve.itacademy.todolist.service.UserService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,10 +14,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 
 @RestController
+@Slf4j
 @RequestMapping("/api")
 public class ToDoController {
     UserService userService;
@@ -40,7 +41,6 @@ public class ToDoController {
                 HttpStatus.OK);
     }
 
-    //TODO
     @PreAuthorize("hasAuthority('ROLE_ADMIN') or #u_id==authentication.principal.id")
     @PostMapping("/users/{u_id}/todos")
     ResponseEntity<?> create(@PathVariable Long u_id, @RequestBody ToDoRequest toDoRequest) {
@@ -48,7 +48,6 @@ public class ToDoController {
         newToDo.setTitle(toDoRequest.getTitle());
         newToDo.setCreatedAt(LocalDateTime.now());
         newToDo.setOwner(userService.readById(u_id));
-        newToDo.setCollaborators(Collections.emptyList());
         return new ResponseEntity<>("Created ToDo " + new ToDoResponse(toDoService.create(newToDo)), HttpStatus.CREATED);
     }
 
@@ -60,7 +59,6 @@ public class ToDoController {
         return new ResponseEntity<>(new ToDoResponse(toDoService.readById(t_id)), HttpStatus.OK);
     }
 
-    //TODO
     @PreAuthorize("hasAuthority('ROLE_ADMIN') " +
             "or @toDoServiceImpl.readById(#t_id).owner.id==authentication.principal.id " +
             "or @toDoServiceImpl.readById(#t_id).collaborators.contains(@userServiceImpl.readById(authentication.principal.id))")
@@ -92,7 +90,6 @@ public class ToDoController {
                 HttpStatus.OK);
     }
 
-    //TODO
     @PreAuthorize("hasAuthority('ROLE_ADMIN') or @toDoServiceImpl.readById(#t_id).owner.id==authentication.principal.id")
     @PostMapping("/todos/{t_id}/collaborators")
     ResponseEntity<?> addCollaborator(@PathVariable Long t_id, @RequestBody CollaboratorRequest collaboratorRequest) {
