@@ -66,7 +66,7 @@ public class UserController {
         user.setEmail(userRequest.getEmail());
         user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
         user.setRole(oldUser.getRole());
-        return new ResponseEntity<>("Updated User " + userService.update(user), HttpStatus.OK);
+        return new ResponseEntity<>("Updated User " + new UserResponse(userService.update(user)), HttpStatus.OK);
     }
 
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
