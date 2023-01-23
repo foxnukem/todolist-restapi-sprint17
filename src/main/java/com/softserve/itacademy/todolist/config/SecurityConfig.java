@@ -7,31 +7,29 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.SecurityFilterChain;
 
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
 @Slf4j
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
-public class SecurityConfig extends WebSecurityConfigurerAdapter {
-    // todo: check https://spring.io/blog/2022/02/21/spring-security-without-the-websecurityconfigureradapter
-
+public class SecurityConfig {
     @Autowired
     UserDetailsService userServiceImpl;
 
-    @Override
-    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+    @Autowired
+    public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
         auth.userDetailsService(userServiceImpl);
     }
 
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .exceptionHandling(eh -> eh
                         .authenticationEntryPoint(restAuthenticationEntryPoint())
@@ -48,8 +46,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // no session
                 )
                 .authorizeHttpRequests(a -> a
-                        .anyRequest().permitAll() // todo
+                        .antMatchers("/api/users/signin").permitAll()
+                        .anyRequest().authenticated()
                 );
+        return http.build();
     }
 
     @Bean

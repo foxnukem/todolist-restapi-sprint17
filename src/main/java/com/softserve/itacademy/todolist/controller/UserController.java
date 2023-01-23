@@ -1,28 +1,33 @@
 package com.softserve.itacademy.todolist.controller;
 
-import com.softserve.itacademy.todolist.dto.TaskResponse;
 import com.softserve.itacademy.todolist.dto.ToDoResponse;
+import com.softserve.itacademy.todolist.dto.UserRequest;
 import com.softserve.itacademy.todolist.dto.UserResponse;
-import com.softserve.itacademy.todolist.model.ToDo;
+import com.softserve.itacademy.todolist.model.User;
+import com.softserve.itacademy.todolist.service.RoleService;
 import com.softserve.itacademy.todolist.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 
-import javax.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
-    @Autowired
     UserService userService;
+    RoleService roleService;
 
+    @Autowired
+    UserController(UserService userService, RoleService roleService) {
+        this.userService = userService;
+        this.roleService = roleService;
+    }
+
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @GetMapping
     List<UserResponse> getAll() {
         return userService.getAll().stream()
@@ -30,37 +35,53 @@ public class UserController {
                 .collect(Collectors.toList());
     }
 
+    //TODO
+    @PostMapping("/signin")
+    ResponseEntity<?> create(@RequestBody UserRequest userRequest) {
+        User user = new User();
+        user.setFirstName(userRequest.getFirstName());
+        user.setLastName(userRequest.getLastName());
+        user.setEmail(userRequest.getEmail());
+        user.setPassword(userRequest.getPassword());
+        user.setRole(roleService.readById(2));
+        return new ResponseEntity<>("Created User " + userService.create(user), HttpStatus.OK);
+    }
+
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or #id==authentication.principal.id")
+    @GetMapping("/{id}")
+    ResponseEntity<?> read(@PathVariable Long id) {
+        return new ResponseEntity<>(new UserResponse(userService.readById(id)), HttpStatus.OK);
+    }
+
+    //TODO
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or #id==authentication.principal.id")
+    @PutMapping("/{id}")
+    ResponseEntity<?> update(@PathVariable Long id, @RequestBody UserRequest userRequest) {
+        User oldUser = userService.readById(id);
+        User user = new User();
+        user.setId(oldUser.getId());
+        user.setFirstName(userRequest.getFirstName());
+        user.setLastName(userRequest.getLastName());
+        user.setEmail(userRequest.getEmail());
+        user.setPassword(userRequest.getPassword());
+        user.setRole(oldUser.getRole());
+        return new ResponseEntity<>("Updated User " + userService.update(user), HttpStatus.OK);
+    }
+
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @DeleteMapping("/{id}")
+    ResponseEntity<?> delete(@PathVariable Long id) {
+        userService.delete(id);
+        return new ResponseEntity<>("User with id " + id + " was deleted", HttpStatus.OK);
+    }
+
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or #u_id==authentication.principal.id")
     @GetMapping("/{u_id}/todos")
     ResponseEntity<?> getTodos(@PathVariable Long u_id) {
         return new ResponseEntity<>(
                 userService.readById(u_id).getMyTodos().stream()
                         .map(ToDoResponse::new)
                         .collect(Collectors.toList()),
-                HttpStatus.OK);
-    }
-
-    @GetMapping("/{u_id}/todos/{t_id}/collaborators")
-    ResponseEntity<?> getTodoCollaborators(@PathVariable Long u_id, @PathVariable Long t_id) {
-        return new ResponseEntity<>(
-                userService.readById(u_id).getMyTodos().stream()
-                        .filter(e -> e.getId().equals(t_id))
-                        .findFirst()
-                        .orElseThrow()
-                        .getCollaborators().stream()
-                        .map(UserResponse::new)
-                        .collect(Collectors.toList()),
-                HttpStatus.OK);
-    }
-
-    @GetMapping("/{u_id}/todos/{t_id}/tasks")
-    ResponseEntity<?> getTasksOfTheToDo(@PathVariable Long u_id, @PathVariable Long t_id) {
-        return new ResponseEntity<>(userService.readById(u_id).getMyTodos().stream()
-                .filter(e -> e.getId().equals(t_id))
-                .findFirst()
-                .orElseThrow()
-                .getTasks().stream()
-                .map(TaskResponse::new)
-                .collect(Collectors.toList()),
                 HttpStatus.OK);
     }
 }
