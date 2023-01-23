@@ -59,9 +59,7 @@ public class ToDoController {
         return new ResponseEntity<>(new ToDoResponse(toDoService.readById(t_id)), HttpStatus.OK);
     }
 
-    @PreAuthorize("hasAuthority('ROLE_ADMIN') " +
-            "or @toDoServiceImpl.readById(#t_id).owner.id==authentication.principal.id " +
-            "or @toDoServiceImpl.readById(#t_id).collaborators.contains(@userServiceImpl.readById(authentication.principal.id))")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @toDoServiceImpl.readById(#t_id).owner.id==authentication.principal.id")
     @PutMapping("/todos/{t_id}")
     ResponseEntity<?> update(@PathVariable Long t_id, @RequestBody ToDoRequest toDoRequest) {
         ToDo toUpdate = toDoService.readById(t_id);
@@ -69,9 +67,7 @@ public class ToDoController {
         return new ResponseEntity<>("Updated ToDo " + new ToDoResponse(toDoService.update(toUpdate)), HttpStatus.CREATED);
     }
 
-    @PreAuthorize("hasAuthority('ROLE_ADMIN') " +
-            "or @toDoServiceImpl.readById(#t_id).owner.id==authentication.principal.id " +
-            "or @toDoServiceImpl.readById(#t_id).collaborators.contains(@userServiceImpl.readById(authentication.principal.id))")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @toDoServiceImpl.readById(#t_id).owner.id==authentication.principal.id")
     @DeleteMapping("/todos/{t_id}")
     ResponseEntity<?> delete(@PathVariable Long t_id) {
         toDoService.delete(t_id);
