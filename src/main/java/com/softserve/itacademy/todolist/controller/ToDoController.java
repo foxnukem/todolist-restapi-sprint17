@@ -6,7 +6,6 @@ import com.softserve.itacademy.todolist.model.User;
 import com.softserve.itacademy.todolist.service.TaskService;
 import com.softserve.itacademy.todolist.service.ToDoService;
 import com.softserve.itacademy.todolist.service.UserService;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +16,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
-@Slf4j
 @RequestMapping("/api")
 public class ToDoController {
     UserService userService;
